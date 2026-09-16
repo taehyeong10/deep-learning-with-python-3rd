@@ -2,6 +2,12 @@
 
 이 저장소는 <[케라스 창시자에게 배우는 딥러닝 3판](https://tensorflow.blog/kerasdl3/)>(길벗, 2026)의 예제 코드를 담고 있습니다. 이 책은 케라스(Keras) 라이브러리의 창시자인 프랑소와 숄레(François Chollet)가 쓴 <Deep Learning with Python 3rd Edition>의 번역서입니다.
 
+* 온라인 서점에서 판매중입니다. [교보문고](https://gilbut.co/c/26096942mO) [Yes24](https://gilbut.co/c/26093663FJ) [알라딘](https://gilbut.co/c/26099048zK)
+* 에러타 페이지: https://tensorflow.blog/kerasdl3/
+* 유튜브에서 동영상 강의를 제공합니다(준비중).
+
+<img src="https://i0.wp.com/tensorflow.blog/wp-content/uploads/2026/09/5800019501026001.jpg?w=400">
+
 각 목차에 해당하는 노트북은 다음을 참고하세요.
 
 * 2장 [신경망의 수학적 구성 요소](chapter02_mathematical-building-blocks.ipynb)
