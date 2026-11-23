@@ -59,6 +59,11 @@ jobs:
           [ -n "$CA" ] || { echo "REGISTRY_CA 가 없어 CA 등록을 건너뜁니다"; exit 0; }
           sudo mkdir -p "/etc/docker/certs.d/$REGISTRY"
           printf '%s\n' "$CA" | sudo tee "/etc/docker/certs.d/$REGISTRY/ca.crt" > /dev/null
+          # certs.d 는 login 에만 적용되고 BuildKit 의 push 에는 적용되지 않으므로
+          # 시스템 신뢰 저장소에도 등록하고 docker 를 재시작한다
+          printf '%s\n' "$CA" | sudo tee /usr/local/share/ca-certificates/image-hub-registry.crt > /dev/null
+          sudo update-ca-certificates
+          sudo systemctl restart docker
 
       - uses: docker/login-action@v4
         with:
