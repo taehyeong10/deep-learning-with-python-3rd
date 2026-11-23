@@ -1,0 +1,28 @@
+# 노트북 실행용 베이스 이미지 의존성.
+# 세 백엔드(JAX / TensorFlow / PyTorch)를 모두 GPU 지원으로 설치한다.
+# CUDA 라이브러리는 pip 휠(nvidia-*)로 함께 설치되므로 호스트에는 NVIDIA 드라이버와
+# nvidia-container-toolkit만 있으면 된다.
+#   - tensorflow, jax : CUDA 12 휠
+#   - torch           : CUDA 13 휠 (호스트 드라이버 580 이상 필요)
+
+# 백엔드
+tensorflow[and-cuda]~=2.21.0
+tensorflow-text~=2.21.0
+torch~=2.15.0
+jax[cuda12]~=0.12.1
+
+# 케라스
+keras>=3.15
+keras-hub>=0.33
+keras-tuner
+
+# 노트북에서 사용하는 그 외 패키지
+kagglehub
+matplotlib
+numpy
+pillow
+regex
+
+# 주피터
+jupyterlab
+ipywidgets

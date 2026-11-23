@@ -1,0 +1,73 @@
+name: Build base image
+
+# 노트북 실행용 GPU 베이스 이미지(docker/)를 빌드해 이미지 허브에 push 한다.
+#   Secret HARBOR_CI_TOKEN = 허브 화면에서 CI 토큰을 발급받은 응답의 ciToken
+#   Secret REGISTRY_CA = 레지스트리 인증서를 서명한 CA (PEM). 공인 인증서면 생략 가능
+#   허브에 <repository> 가 아직 없어도 된다. 첫 push 때 만들어진다
+#   push 대상 = <토큰의 registry>/taehyeong-imagehub-01/<repository>:<image_tag>
+#   (허브는 토큰으로 결정되므로 토큰은 taehyeong-imagehub-01 에서 발급해야 한다)
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: '레포지토리 이름'
+        required: true
+        default: dlwp3-base
+      image_tag:
+        description: '이미지 태그 (예: 0.1.0)'
+        required: true
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # 세 백엔드의 CUDA 라이브러리가 들어가 이미지가 10GB를 넘으므로 러너 공간을 확보한다
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - name: Decode CI token
+        id: token
+        env:
+          CI_TOKEN: ${{ secrets.HARBOR_CI_TOKEN }}
+          REPOSITORY: ${{ inputs.repository }}
+          EXPECTED_HUB: taehyeong-imagehub-01
+        run: |
+          set -euo pipefail
+          [ -n "$REPOSITORY" ] || { echo "::error::repository 가 비어 있습니다"; exit 1; }
+          PADDED="$CI_TOKEN$(printf '%*s' $(( (4 - ${#CI_TOKEN} % 4) % 4 )) '' | tr ' ' '=')"
+          JSON=$(printf '%s' "$PADDED" | tr '_-' '/+' | base64 -d)
+          HUB=$(jq -r .hub <<<"$JSON")
+          [ "$HUB" = "$EXPECTED_HUB" ] || { echo "::error::CI 토큰의 허브($HUB)가 $EXPECTED_HUB 가 아닙니다. $EXPECTED_HUB 화면에서 토큰을 다시 발급하세요"; exit 1; }
+          SECRET=$(jq -r .secret <<<"$JSON")
+          echo "::add-mask::$SECRET"
+          {
+            echo "registry=$(jq -r .registry <<<"$JSON")"
+            echo "username=$(jq -r .username <<<"$JSON")"
+            echo "secret=$SECRET"
+            echo "image=$(jq -r .registry <<<"$JSON")/$(jq -r .hub <<<"$JSON")/$REPOSITORY"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Trust registry CA
+        env:
+          CA: ${{ secrets.REGISTRY_CA }}
+          REGISTRY: ${{ steps.token.outputs.registry }}
+        run: |
+          [ -n "$CA" ] || { echo "REGISTRY_CA 가 없어 CA 등록을 건너뜁니다"; exit 0; }
+          sudo mkdir -p "/etc/docker/certs.d/$REGISTRY"
+          printf '%s\n' "$CA" | sudo tee "/etc/docker/certs.d/$REGISTRY/ca.crt" > /dev/null
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ${{ steps.token.outputs.registry }}
+          username: ${{ steps.token.outputs.username }}
+          password: ${{ steps.token.outputs.secret }}
+
+      - uses: docker/build-push-action@v7
+        with:
+          context: docker
+          push: true
+          tags: ${{ steps.token.outputs.image }}:${{ inputs.image_tag }}
