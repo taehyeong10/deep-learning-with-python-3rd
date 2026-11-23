@@ -6,15 +6,19 @@ import sys
 CHECKS = {
     "jax": (
         "import jax; d = jax.devices(); print(jax.__version__, d); "
-        "assert d[0].platform == 'gpu'"
+        "assert d[0].platform == 'gpu'; import jax.numpy as jnp; "
+        "x = jnp.ones((64, 64)); print(float((x @ x).sum()))"
     ),
     "tensorflow": (
         "import tensorflow as tf; g = tf.config.list_physical_devices('GPU'); "
-        "print(tf.__version__, g); assert g"
+        "print(tf.__version__, g); assert g; x = tf.ones((64, 64)); "
+        "y = tf.matmul(x, x); assert 'GPU' in y.device; print(float(tf.reduce_sum(y)))"
     ),
     "torch": (
         "import torch; print(torch.__version__, torch.version.cuda); "
-        "assert torch.cuda.is_available(); print(torch.cuda.get_device_name(0))"
+        "assert torch.cuda.is_available(); print(torch.cuda.get_device_name(0)); "
+        "x = torch.ones(64, 64, device='cuda'); print(float((x @ x).sum())); "
+        "c = torch.nn.Conv2d(3, 4, 3).cuda(); print(c(torch.ones(1, 3, 16, 16, device='cuda')).shape)"
     ),
 }
 

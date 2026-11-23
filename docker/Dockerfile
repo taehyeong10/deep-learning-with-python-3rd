@@ -19,6 +19,13 @@ ENV PIP_NO_CACHE_DIR=1 \
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt && rm /tmp/requirements.txt
 
+# TensorFlow는 pip로 설치된 CUDA 라이브러리(site-packages/nvidia/*/lib)를 스스로 찾지 못해
+# GPU를 인식하지 못한다. 동적 링커 캐시에 등록해 준다.
+RUN python -c "import glob, sysconfig; print('\n'.join(sorted(glob.glob(sysconfig.get_paths()['purelib'] + '/nvidia/*/lib'))))" \
+        > /etc/ld.so.conf.d/nvidia-pip.conf \
+    && test -s /etc/ld.so.conf.d/nvidia-pip.conf \
+    && ldconfig
+
 COPY check_gpu.py /opt/check_gpu.py
 
 WORKDIR /workspace
