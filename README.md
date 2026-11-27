@@ -11,7 +11,7 @@
 각 목차에 해당하는 노트북은 다음을 참고하세요.
 
 * 2장 [신경망의 수학적 구성 요소](chapter02_mathematical-building-blocks.ipynb)
-* 3장 [텐서플로, 파이토치, JAX 그리고 케라스에 대한 소개](chapter03_introduction-to-ml-frameworks.ipynb)
+* 3장 텐서플로, 파이토치, JAX 그리고 케라스에 대한 소개: [텐서플로](chapter03_1_tensorflow.ipynb), [파이토치](chapter03_2_pytorch.ipynb), [JAX](chapter03_3_jax.ipynb), [케라스](chapter03_4_keras.ipynb)
 * 4장 [분류와 회귀](chapter04_classification-and-regression.ipynb)
 * 5장 [머신 러닝의 기본 요소](chapter05_fundamentals-of-ml.ipynb)
 * 7장 [케라스 완전 정복](chapter07_deep-dive-keras.ipynb)
