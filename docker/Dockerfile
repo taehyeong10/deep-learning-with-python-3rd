@@ -1,9 +1,10 @@
 FROM python:3.12-slim
 
-# 노트북의 셸 명령(!wget, !unzip, !tar)에 필요한 도구
+# 노트북의 셸 명령(!wget, !unzip, !tar)에 필요한 도구.
+# g++는 torch.compile이 첫 호출 때 C++ 코드를 컴파일하는 데 필요하다.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        ca-certificates curl git wget unzip tar \
+        ca-certificates curl git wget unzip tar g++ \
     && rm -rf /var/lib/apt/lists/*
 
 ENV PIP_NO_CACHE_DIR=1 \
