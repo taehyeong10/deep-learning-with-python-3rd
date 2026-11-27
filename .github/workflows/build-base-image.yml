@@ -2,7 +2,7 @@ name: Build base image
 
 # 노트북 실행용 GPU 베이스 이미지(docker/)를 빌드해 이미지 허브에 push 한다.
 #   Secret HARBOR_CI_TOKEN = 허브 화면에서 CI 토큰을 발급받은 응답의 ciToken
-#   Secret REGISTRY_CA = 레지스트리 인증서를 서명한 CA (PEM). 공인 인증서면 생략 가능
+#   레지스트리 CA 시크릿(Trust registry CA 단계 참고) = 레지스트리 인증서를 서명한 CA (PEM). 공인 인증서면 생략 가능
 #   허브에 <repository> 가 아직 없어도 된다. 첫 push 때 만들어진다
 #   push 대상 = <토큰의 registry>/taehyeong-imagehub-01/<repository>:<image_tag>
 #   (허브는 토큰으로 결정되므로 토큰은 taehyeong-imagehub-01 에서 발급해야 한다)
@@ -44,6 +44,8 @@ jobs:
           [ "$HUB" = "$EXPECTED_HUB" ] || { echo "::error::CI 토큰의 허브($HUB)가 $EXPECTED_HUB 가 아닙니다. $EXPECTED_HUB 화면에서 토큰을 다시 발급하세요"; exit 1; }
           SECRET=$(jq -r .secret <<<"$JSON")
           echo "::add-mask::$SECRET"
+          # 공개 저장소의 실행 로그에 레지스트리 주소가 남지 않게 가린다
+          echo "::add-mask::$(jq -r .registry <<<"$JSON")"
           {
             echo "registry=$(jq -r .registry <<<"$JSON")"
             echo "username=$(jq -r .username <<<"$JSON")"
@@ -53,10 +55,10 @@ jobs:
 
       - name: Trust registry CA
         env:
-          CA: ${{ secrets.REGISTRY_CA }}
+          CA: ${{ secrets.AIPUB_REGISTRY_CA }}
           REGISTRY: ${{ steps.token.outputs.registry }}
         run: |
-          [ -n "$CA" ] || { echo "REGISTRY_CA 가 없어 CA 등록을 건너뜁니다"; exit 0; }
+          [ -n "$CA" ] || { echo "CA 시크릿이 없어 CA 등록을 건너뜁니다"; exit 0; }
           sudo mkdir -p "/etc/docker/certs.d/$REGISTRY"
           printf '%s\n' "$CA" | sudo tee "/etc/docker/certs.d/$REGISTRY/ca.crt" > /dev/null
           # certs.d 는 login 에만 적용되고 BuildKit 의 push 에는 적용되지 않으므로
